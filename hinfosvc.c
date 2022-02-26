@@ -12,17 +12,15 @@ char *gethostname(char *buffer)
     *path = "cat /proc/sys/kernel/hostname";
     fptr = popen(*path, "r");
     fgets(buffer, 256, fptr);
-    printf("%s   %i", buffer, strlen(buffer));
     return;
 }
 void getcpuname(char *buffer)
 {
     FILE *fptr;
     char *path[255];
-    *path = "cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d':' -f2-";
+    *path = "cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d':' -f2- | cut -b 2-";
     fptr = popen(*path, "r");
     fgets(buffer, 256, fptr);
-    printf("%s   %i", buffer, strlen(buffer));
     return;
 }
 void getcpuload(char *buffer)
@@ -45,9 +43,6 @@ int main(int argc, char const *argv[])
     long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-
-    // Only this line has been changed. Everything is same.
-    char *hello = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n";
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0)
     {
@@ -86,24 +81,32 @@ int main(int argc, char const *argv[])
         valread = read(new_socket, buffer, 30000);
         if (strstr(buffer, "/hostname"))
         {
-            gethostname(buffer2);
+            char string[1256] = "HTTP/1.1 200 OK\nContent-Type: text/plain;\r\n\r\n";
+			gethostname(buffer2);
+			strcat(string, buffer2);
+
+        write(new_socket, string, strlen(string));
         }
-        if (strstr(buffer, "/cpu-name"))
+        else if (strstr(buffer, "/cpu-name"))
         {
-            getcpuname(buffer2);
+            
+			char string[1256] = "HTTP/1.1 200 OK\nContent-Type: text/plain;\r\n\r\n";
+			getcpuname(buffer2);
+			strcat(string, buffer2);
+        	write(new_socket, string, strlen(string));
         }
-		if (strstr(buffer, "/load"))
+		else if (strstr(buffer, "/load"))
 		{
 
 			getcpuload(buffer);
 		}
 		else
 		{
-
+			char string[1256] = "HTTP/1.1 400 Bad Request\r\n";
+        	write(new_socket, string, strlen(string));
 		}
-        char string[256] = "HTTP/1.1 200 OK\nContent-Type: text/plain;\r\n\r\n";
-        strcat(string, buffer2);
-        write(new_socket, string, strlen(string));
+
+
 
         close(new_socket);
     }
