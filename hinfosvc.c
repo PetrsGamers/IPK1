@@ -36,8 +36,6 @@ int getcpuload()
 	*path = "cat /proc/stat | head -n 1";
 	fptr = popen(*path, "r");
 	fgets(buffer2, 256, fptr);
-	printf("%s", buffer);
-	printf("%s", buffer2);
 	int i = 0;
 	char *p = strtok(buffer, " ");
 	char *array[11];
@@ -56,7 +54,6 @@ int getcpuload()
 	int prevsoftirq = atoi(array[7]);
 	int prevsteal = atoi(array[8]);
 
-	printf("%i %i %i %i %i %i %i ", prevuser, prevnice, prevsystem, previdle, previowait, previrq, prevsoftirq, prevsteal);
 	int j = 0;
 	char *k = strtok(buffer2, " ");
 	char *array2[11];
@@ -99,16 +96,18 @@ int main(int argc, char const *argv[])
 	{
 		return 1;
 	}
+	if (argv[1] > 65535 || argv[1] < 0)
+	{
+		return 1;
+	}
+
 	int server_fd, new_socket;
 	long valread;
 	struct sockaddr_in address;
 	int addrlen = sizeof(address);
-	char buffer2[256];	 //
-	getcpuload(buffer2); //
-	printf(buffer2);
+	char buffer2[256]; //
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0)
 	{
-		perror("In socket");
 		exit(EXIT_FAILURE);
 	}
 
@@ -121,12 +120,10 @@ int main(int argc, char const *argv[])
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
-		perror("In bind");
 		exit(EXIT_FAILURE);
 	}
 	if (listen(server_fd, 10) < 0)
 	{
-		perror("In listen");
 		exit(EXIT_FAILURE);
 	}
 	while (1)
