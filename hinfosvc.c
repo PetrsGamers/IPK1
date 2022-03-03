@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #define PORT 8080
-char *gethostname(char *buffer)
+void gethostname(char *buffer)
 {
 	FILE *fptr;
 	char *path[255];
@@ -98,7 +98,7 @@ int main(int argc, char const *argv[])
 	}
 	if (argv[1] > 65535 || argv[1] < 0)
 	{
-		return 1;
+		//return 1;
 	}
 
 	int server_fd, new_socket;
