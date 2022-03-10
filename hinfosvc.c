@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-#define PORT 8080
 void gethostname(char *buffer)
 {
 	FILE *fptr;
@@ -12,6 +11,7 @@ void gethostname(char *buffer)
 	*path = "cat /proc/sys/kernel/hostname";
 	fptr = popen(*path, "r");
 	fgets(buffer, 256, fptr);
+	fclose(fptr);
 	return;
 }
 void getcpuname(char *buffer)
@@ -21,6 +21,7 @@ void getcpuname(char *buffer)
 	*path = "cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d':' -f2- | cut -b 2-";
 	fptr = popen(*path, "r");
 	fgets(buffer, 256, fptr);
+	fclose(fptr);
 	return;
 }
 int getcpuload()
@@ -33,13 +34,11 @@ int getcpuload()
 	fptr = popen(*path, "r");
 	fgets(buffer, 256, fptr);
 	sleep(1);
-	*path = "cat /proc/stat | head -n 1";
 	fptr = popen(*path, "r");
 	fgets(buffer2, 256, fptr);
 	int i = 0;
 	char *p = strtok(buffer, " ");
 	char *array[11];
-
 	while (p != NULL)
 	{
 		array[i++] = p;
@@ -72,22 +71,17 @@ int getcpuload()
 	int irq = atoi(array2[6]);
 	int softirq = atoi(array2[7]);
 	int steal = atoi(array2[8]);
-
 	int PrevIdle = previdle + previowait;
 	int Idle = idle + iowait;
-
 	int PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal;
 	int NonIdle = user + nice + system + irq + softirq + steal;
-
 	int PrevTotal = PrevIdle + PrevNonIdle;
 	int Total = Idle + NonIdle;
-
 	double totald = Total - PrevTotal;
 	double idled = Idle - PrevIdle;
-
 	double CPU_Percentage = (totald - idled) / totald;
 	CPU_Percentage = CPU_Percentage * 100;
-
+	fclose(fptr);
 	return CPU_Percentage;
 }
 int main(int argc, char const *argv[])
@@ -96,18 +90,19 @@ int main(int argc, char const *argv[])
 	{
 		return 1;
 	}
-	if (argv[1] > 65535 || argv[1] < 0)
+	int intarg = atoi(argv[1]);
+	if (intarg > 65535 || intarg < 0)
 	{
-		//return 1;
+		exit(EXIT_FAILURE);
+		return 1;
 	}
 
 	int server_fd, new_socket;
-	long valread;
 	struct sockaddr_in address;
 	int addrlen = sizeof(address);
-	char buffer2[256]; //
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0)
 	{
+		
 		exit(EXIT_FAILURE);
 	}
 
@@ -120,52 +115,60 @@ int main(int argc, char const *argv[])
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
+
 		exit(EXIT_FAILURE);
 	}
 	if (listen(server_fd, 10) < 0)
 	{
+		
 		exit(EXIT_FAILURE);
 	}
 	while (1)
 	{
-		char buffer2[256];
+		
 		if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
 		{
-			perror("In accept");
 			exit(EXIT_FAILURE);
 		}
 
 		char buffer[30000] = {0};
-		valread = read(new_socket, buffer, 30000);
-		if (strstr(buffer, "/hostname"))
+		long valread = read(new_socket, buffer, 30000);
+		
+		if (strstr(buffer, "GET /hostname"))
 		{
+		char buffer2[256];
+			
 			char string[1256] = "HTTP/1.1 200 OK\nContent-Type: text/plain;\r\n\r\n";
 			gethostname(buffer2);
 			strcat(string, buffer2);
 
 			write(new_socket, string, strlen(string));
 		}
-		else if (strstr(buffer, "/cpu-name"))
+		else if (strstr(buffer, "GET /cpu-name"))
 		{
 
+			
+		char buffer2[256];
 			char string[1256] = "HTTP/1.1 200 OK\nContent-Type: text/plain;\r\n\r\n";
 			getcpuname(buffer2);
 			strcat(string, buffer2);
 			write(new_socket, string, strlen(string));
 		}
-		else if (strstr(buffer, "/load"))
+		else if (strstr(buffer, "GET /load"))
 		{
 
+			
 			int cpu = getcpuload();
 			char string[1256] = "HTTP/1.1 200 OK\nContent-Type: text/plain;\r\n\r\n";
 			char str[3];
 			sprintf(str, "%d", cpu);
 			strcat(string, str);
-			strcat(string, "%");
+			strcat(string, "%\n");
 			write(new_socket, string, strlen(string));
 		}
 		else
 		{
+			
 			char string[1256] = "HTTP/1.1 400 Bad Request\r\n";
 			write(new_socket, string, strlen(string));
 		}
