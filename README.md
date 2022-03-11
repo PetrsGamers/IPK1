@@ -1,6 +1,6 @@
 # Project 1 
 
-This project is about creating a TCP server which will communicate via HTTP protocol. The server will return various infromation about itself.
+This project is about creating a TCP server which will communicate via HTTP protocol. The server will return various information about itself.
 
 Author: Petr Hýbl (xhyblp01)
 [xhyblp01@vutbr.cz](mailto:xhyblp01@vutbr.cz)

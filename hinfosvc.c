@@ -139,7 +139,7 @@ int main(int argc, char const *argv[])
 		char buffer[30000] = {0};
 		long valread = read(new_socket, buffer, 30000);
 
-		if (strstr(buffer, "GET /hostname")) //request is hostname
+		if (strstr(buffer, "GET /hostname ")) //request is hostname
 		{
 			char buffer2[256];
 
@@ -149,7 +149,7 @@ int main(int argc, char const *argv[])
 
 			write(new_socket, string, strlen(string)); //return to a client
 		}
-		else if (strstr(buffer, "GET /cpu-name")) //request is cpu-name
+		else if (strstr(buffer, "GET /cpu-name ")) //request is cpu-name
 		{
 
 			char buffer2[256];
@@ -158,7 +158,7 @@ int main(int argc, char const *argv[])
 			strcat(string, buffer2); // add to header cpu-name
 			write(new_socket, string, strlen(string));  //return to a client
 		} 
-		else if (strstr(buffer, "GET /load")) //request is cpu-load
+		else if (strstr(buffer, "GET /load ")) //request is cpu-load
 		{
 
 			int cpu = getcpuload();
