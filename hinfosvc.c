@@ -66,8 +66,7 @@ int getcpuload()
 		k = strtok(NULL, " ");
 	}
 
-	int prevuser = atoi(array[1]); // this will create a variables needed for the calculation
-	int user = atoi(array2[1]);  
+	int user = atoi(array2[1]);  // this will create a variables needed for the calculation
 	int nice = atoi(array2[2]);
 	int system = atoi(array2[3]);
 	int idle = atoi(array2[4]);
