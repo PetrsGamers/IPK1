@@ -1,3 +1,3 @@
 FLAGS = -std=c99 -Wall -Wextra
 all:hinfosvc.c
-	gcc ${FLAGS} hinfosvc.c -o hinfosvc
+	gcc hinfosvc.c -o hinfosvc
